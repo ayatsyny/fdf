@@ -14,6 +14,9 @@
 #define FDF_H
 #define SIZ_H 1000
 #define SIZ_W 1000
+#define ALPHA 48.5
+#define BETA 0.0
+#define GAMMA 315.0
 #define RELATION(digit, percentage) ((digit * percentage) / 100)
 #include <math.h>
 #include "mlx.h"
@@ -77,7 +80,7 @@ unsigned	count_dbl_lst_x(t_fdf **head);
 void	dbl_lstiter(t_fdf *lst, int revert, t_xyz xyz);
 
 
-void	draw_line(t_env *e, t_xyz xy0, t_xyz xy1);
+//void	draw_line(t_env *e, t_xyz xy0, t_xyz xy1);
 
 
 void	init_env(t_env *env, char *name_prg);

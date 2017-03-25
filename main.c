@@ -146,18 +146,18 @@ int 	expose_hook(t_env *e)
 
 
 
-void	test_bresenham(t_env *e)
-{
-	t_xyz xy0;
-	t_xyz xy1;
-
-	xy0.x = 50;
-	xy0.y = 50;
-
-	xy1.x = 700;
-	xy1.y = 700;
-	draw_line(e, xy0, xy1);
-}
+//void	test_bresenham(t_env *e)
+//{
+//	t_xyz xy0;
+//	t_xyz xy1;
+//
+//	xy0.x = 50;
+//	xy0.y = 50;
+//
+//	xy1.x = 700;
+//	xy1.y = 700;
+////	draw_line(e, xy0, xy1);
+//}
 
 //
 //int main(int argc, char **argv)
@@ -279,20 +279,51 @@ int 	change_base_cordinate(t_fdf **head)
 	int m;
 	int len_x;
 	int len_y;
+	int riz;
+	int i;
 
 	p = *head;
+	i = 1;
 	len_x = count_dbl_lst_x(head);
 	len_y = count_dbl_lst_y(head);
 	m = RELATION((SIZ_W >= SIZ_H ? SIZ_W : SIZ_H), 80) / (len_x > len_y ? len_x : len_y);
+	riz = RELATION((SIZ_W >= SIZ_H ? SIZ_W : SIZ_H), 10) + ((len_x > len_y ? len_x : len_y) - 1) * m;
+	riz = (int)lround((RELATION((SIZ_W >= SIZ_H ? SIZ_W : SIZ_H), 80) - riz) / 2);
 	while (p)
 	{
 		p->coordinates.x -= len_x/2;
 		p->coordinates.y -= len_y/2;
-		p->oxyz.x = p->coordinates.x * m;
+		p->oxyz.x = p->coordinates.x * m + riz * i;
+		p->new_line ? i = 1 : i++;
 		p->oxyz.y = p->coordinates.y * m;
 		p = p->next;
 	}
-	return (m);
+	return (riz);
+}
+
+void	change_new_xyz(t_fdf **head)
+{
+	t_fdf *p;
+	int m;
+	int len_x;
+	int len_y;
+	int riz;
+	int i;
+
+	p = *head;
+	i = 1;
+	len_x = count_dbl_lst_x(head);
+	len_y = count_dbl_lst_y(head);
+	m = RELATION((SIZ_W >= SIZ_H ? SIZ_W : SIZ_H), 80) / (len_x > len_y ? len_x : len_y);
+	riz = RELATION((SIZ_W >= SIZ_H ? SIZ_W : SIZ_H), 10) + ((len_x > len_y ? len_x : len_y) - 1) * m;
+	riz = (int)lround((RELATION((SIZ_W >= SIZ_H ? SIZ_W : SIZ_H), 80) - riz) / 2);
+	while (p)
+	{
+		p->oxyz.x = p->oxyz.x * m + riz * i;
+		p->new_line ? i = 1 : i++;
+		p->oxyz.y = p->oxyz.y * m;
+		p = p->next;
+	}
 }
 
 //void 	change_field(t_fdf **head)
@@ -310,7 +341,7 @@ int 	change_base_cordinate(t_fdf **head)
 //	}
 //}
 
-void	draw_dom(t_fdf **head, t_env *env, int m)
+void	draw_dom(t_fdf **head, int x, int y)
 {
 	t_fdf *p;
 	int  i = 0;
@@ -318,19 +349,127 @@ void	draw_dom(t_fdf **head, t_env *env, int m)
 	p = *head;
 	while (p)
 	{
-		p->oxyz.x += SIZ_W / 2;
-		p->oxyz.y += SIZ_H / 2;
+		p->oxyz.x += x;
+		p->oxyz.y += y;
 		printf("%d. x = %f y = %f \n", i++, p->oxyz.x, p->oxyz.y);
 		if (p->new_line)
 		{
 			printf("new line \n\n\n");
 			i = 0;
 		}
-		put_px((int)p->oxyz.x, (int)p->oxyz.y, p->color, env);
+//		put_px((int)p->oxyz.x, (int)p->oxyz.y, p->color, env);
 		p = p->next;
 	}
 }
 
+void 	draw_line(t_fdf **head, t_env *env)
+{
+	t_fdf *p;
+	t_fdf *tmp;
+	int count;
+
+	p = *head;
+	tmp = *head;
+	count = 0;
+	while (p)
+	{
+		if (count)
+		{
+			segment((int)tmp->oxyz.x, (int)tmp->oxyz.y, (int)p->oxyz.x, (int)p->oxyz.y, p->color, env);
+			tmp = tmp->next;
+		}
+		if (!p->new_line && p->next)
+			segment((int)p->oxyz.x, (int)p->oxyz.y, (int)p->next->oxyz.x, (int)p->next->oxyz.y, p->color, env);
+		else
+			count++;
+		p = p->next;
+	}
+}
+
+void draw_3d(t_fdf **head)
+{
+	t_fdf *p;
+	double rad_alpha;
+	double rad_beta;
+	double rad_gamma;
+
+	rad_alpha = ALPHA * M_PI / 180.0;
+	rad_beta = BETA * M_PI / 180.0;
+	rad_gamma = GAMMA * M_PI / 180.0;
+	p = *head;
+
+	while (p)
+	{
+		p->oxyz.x = p->coordinates.x * cos(rad_gamma) + p->coordinates.y * sin(rad_gamma);
+		p->oxyz.y = -p->coordinates.x * sin(rad_gamma) + p->coordinates.y * cos(rad_gamma);
+		p->oxyz.z = p->coordinates.z;
+
+		p->oxyz.y = p->coordinates.y * cos(rad_alpha) + p->coordinates.z * sin(rad_alpha);
+		p->oxyz.z = -p->coordinates.y * sin(rad_alpha) + p->coordinates.z * cos(rad_alpha);
+
+		p->oxyz.x = p->coordinates.x * cos(rad_beta) + p->coordinates.z * sin(rad_beta);
+		p->oxyz.z = -p->coordinates.x * sin(rad_beta) + p->coordinates.z * cos(rad_beta);
+		p = p->next;
+	}
+}
+
+void mastab(t_fdf **head, float k)
+{
+	t_fdf *p;
+
+	p = *head;
+	while (p)
+	{
+		p->oxyz.x /= k;
+		p->oxyz.y /= k;
+		p->oxyz.z /= k;
+		p = p->next;
+	}
+}
+
+void matrix_povorot(t_oxyz vector, float angle, t_oxyz *xyz)
+{
+	double m[3][3];
+	double cos_one;
+	double cos_s;
+	double sin_s;
+
+	cos_s = cos(angle);
+	cos_one = 1 - cos_s;
+	sin_s = sin(angle);
+	m[0][0] = cos_s + cos_one * vector.x * vector.x;
+	m[0][1] = cos_one * vector.y * vector.x + sin_s * vector.z;
+	m[0][2] = cos_one * vector.z * vector.x - sin_s * vector.y;
+
+	m[1][0] = cos_one * vector.x * vector.y - sin_s * vector.z;
+	m[1][1] = cos_s + cos_one * vector.y * vector.y;
+	m[1][2] = cos_one * vector.z * vector.y + sin_s * vector.x;
+
+	m[2][0] = cos_one * vector.x * vector.z + sin_s * vector.y;
+	m[2][1] = cos_one * vector.y * vector.z - sin_s * vector.x;
+	m[2][2] = cos_s + cos_one * vector.z * vector.z;
+
+	xyz->x = xyz->x * m[0][0] + xyz->y * m[0][1] + xyz->z * m[0][2];
+	xyz->y = xyz->x * m[1][0] + xyz->y * m[1][1] + xyz->z * m[1][2];
+	xyz->z = xyz->x * m[2][0] + xyz->y * m[2][1] + xyz->z * m[2][2];
+}
+
+
+void cccc(t_fdf **head)
+{
+	t_fdf *p;
+	t_oxyz xyz;
+
+	xyz.x = 1;
+	xyz.y = 0;
+	xyz.z = 0;
+	p = *head;
+	while (p)
+	{
+		matrix_povorot(xyz, 45, &p->oxyz);
+		p = p->next;
+	}
+}
 
 //void 	draw(t_fdf **head, t_env *gen)
 //{
@@ -381,9 +520,20 @@ int main(int argc, char **argv)
 	test.img = mlx_new_image(test.mlx, SIZ_W, SIZ_H);
 	test.buf_img = mlx_get_data_addr(test.img, &bits_per_pixel, &test.size_line, &endian);
 	printf("len buf %d %d %d \n", bits_per_pixel, test.size_line, endian);
-	int m;
-	m = change_base_cordinate(&head);
-	draw_dom(&head, &test, m);
+	change_base_cordinate(&head);
+//	matrix_povorot(xyz, 270);
+
+	t_xyz xyz;
+	xyz.x = SIZ_W / 2;
+	xyz.y = SIZ_H / 2;
+	xyz.z = 0;
+	draw_dom(&head, (int)xyz.x, (int)xyz.y);
+//	draw_3d(&head);
+//	change_new_xyz(&head);
+//	draw_dom(&head);
+//	mastab(&head, 0.1);
+	cccc(&head);
+	draw_line(&head, &test);
 //	moving_central(&head);
 //	printf("%d %d %d\n", bits_per_pixel, size_line, endian);
 //	if (test.buf_img)

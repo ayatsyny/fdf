@@ -1,30 +1,30 @@
 
 #include "fdf.h"
 
-void	draw_line(t_env *e, t_xyz xy0, t_xyz xy1)
-{
-	int		y;
-	int		x;
-	double	k;
-	double	d;
-
-	k = ((double)(xy1.y - xy0.y)) / (xy1.x - xy0.x);
-	d = 2 * k - 1;
-	y = xy0.y;
-	mlx_pixel_put(e->mlx, e->win, xy0.x, xy0.y, 0x00FFFFFF);
-	x = xy0.x - 1;
-	while (++x <= xy1.x)
-	{
-		if (d > 0)
-		{
-			d += 2 * k - 2;
-			y++;
-		}
-		else
-			d += 2 * k;
-		mlx_pixel_put(e->mlx, e->win, x, y, 0x00FFFFFF);
-	}
-}
+//void	draw_line(t_env *e, t_xyz xy0, t_xyz xy1)
+//{
+//	int		y;
+//	int		x;
+//	double	k;
+//	double	d;
+//
+//	k = ((double)(xy1.y - xy0.y)) / (xy1.x - xy0.x);
+//	d = 2 * k - 1;
+//	y = xy0.y;
+//	mlx_pixel_put(e->mlx, e->win, xy0.x, xy0.y, 0x00FFFFFF);
+//	x = xy0.x - 1;
+//	while (++x <= xy1.x)
+//	{
+//		if (d > 0)
+//		{
+//			d += 2 * k - 2;
+//			y++;
+//		}
+//		else
+//			d += 2 * k;
+//		mlx_pixel_put(e->mlx, e->win, x, y, 0x00FFFFFF);
+//	}
+//}
 
 void segment(int x0, int y0, int x1, int y1, t_rgb rgb, t_env *gen)
 {
